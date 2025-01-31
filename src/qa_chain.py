@@ -58,14 +58,14 @@ def create_qa_chain(use_cli=False):
     # Create retriever
     retriever = vectorstore.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 3}
+        search_kwargs={"k": 5}
     )
     
     # Create LLM
     llm = Ollama(model="llama2", base_url="http://localhost:11434")
     
     # Add a custom prompt template for Greenburgh
-    prompt_template = """You are a helpful assistant for the Town of Greenburgh, NY. Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    prompt_template = """You are a helpful assistant for the Town of Greenburgh, NY. Use the following pieces of context to answer the question at the end. If you don't know the answer, apologize and say you were unable to locate that information, don't try to make up an answer.
 
 Context:
 {context}
