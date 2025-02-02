@@ -5,8 +5,7 @@ A RAG (Retrieval-Augmented Generation) system for the Greenburgh website, using 
 ## Setup
 bash
 python3 -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate
-
+source venv/bin/activate 
 
 2. **Install requirements**
 bash

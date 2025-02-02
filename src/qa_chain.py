@@ -1,11 +1,9 @@
 import os
 from langchain.chains import RetrievalQA
-from langchain_community.llms import Ollama
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
-from langchain_community.embeddings import OllamaEmbeddings
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 import pinecone
 from pinecone import Pinecone, ServerlessSpec
 
@@ -35,16 +33,19 @@ def init_pinecone():
     return pinecone.Index(index_name)
 
 def create_qa_chain(use_cli=False):
-    """Create a QA chain using Pinecone for retrieval and Ollama/Llama2 for generation."""
+    """Create a QA chain using Pinecone for retrieval and OpenAI for generation."""
     
     # Get the index
     index_name = os.getenv("PINECONE_INDEX")
-    index = init_pinecone()
     
-    # Create embeddings instance
-    embeddings = OllamaEmbeddings(
-        model="llama2",
-        base_url="http://localhost:11434"
+    # Initialize Pinecone
+    pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+    index = pc.Index(index_name)
+    
+    # Create embeddings instance - using OpenAI embeddings
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        api_key=os.getenv("OPENAI_API_KEY")
     )
     
     # Create vectorstore
@@ -52,7 +53,7 @@ def create_qa_chain(use_cli=False):
         index,
         embeddings,
         "text",  # metadata field that contains the text
-        namespace=os.getenv("PINECONE_NAMESPACE", "prod")  # use environment variable or default to prod
+        namespace=os.getenv("PINECONE_NAMESPACE", "prod")
     )
     
     # Create retriever
@@ -61,8 +62,12 @@ def create_qa_chain(use_cli=False):
         search_kwargs={"k": 5}
     )
     
-    # Create LLM
-    llm = Ollama(model="llama2", base_url="http://localhost:11434")
+    # Create OpenAI LLM
+    llm = ChatOpenAI(
+        model="gpt-4-turbo-preview",
+        temperature=0.7,
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
     
     # Add a custom prompt template for Greenburgh
     prompt_template = """You are a helpful assistant for the Town of Greenburgh, NY. Use the following pieces of context to answer the question at the end. If you don't know the answer, apologize and say you were unable to locate that information, don't try to make up an answer.
